@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devices - Master Data Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Master Data Manager
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link active">Devices</a>
+        <a href="vehicles.html" class="nav-link">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-primary); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="trajectory.html" class="nav-link">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Devices</h2>
+        <p class="page-subtitle">Manage tracking devices and sensors</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Import CSV
+        </button>
+        <input type="file" id="importFile" accept=".csv" style="display: none" onchange="importCSV(event)">
+        <button class="btn btn-secondary" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+        <button class="btn btn-secondary" onclick="clearData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Clear Data
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Device
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Serial No</th>
+              <th>IMEI</th>
+              <th>IMSI</th>
+              <th>FW ID</th>
+              <th>FW Version</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Activate Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamic content -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add Device</h3>
+        <button class="modal-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="dataForm" onsubmit="saveRecord(event)">
+        <div class="modal-body">
+          <input type="hidden" name="original_serial_no" id="originalSerialNo">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Serial No <span class="required">*</span></label>
+              <input type="text" name="serial_no" class="form-input" required placeholder="DEV-001">
+              <small class="form-hint">デバイスシリアル番号 (varchar100)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">IMEI <span class="required">*</span></label>
+              <input type="number" name="imei" class="form-input" required placeholder="123456789012345">
+              <small class="form-hint">15桁の国際モバイル機器識別番号 (bigint)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">IMSI <span class="required">*</span></label>
+              <input type="number" name="imsi" class="form-input" required placeholder="440201234567890">
+              <small class="form-hint">最大15桁のSIM識別番号 (bigint)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Firmware ID</label>
+              <input type="text" name="fw_id" class="form-input" placeholder="FW-001">
+              <small class="form-hint">デバイス固有のファームウェア識別子 (varchar100)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Firmware Version</label>
+              <input type="text" name="fw_version" class="form-input" placeholder="1.0.0">
+              <small class="form-hint">ファームウェアバージョン (varchar100)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Activate Date</label>
+              <input type="datetime-local" name="activate_date" class="form-input">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-textarea" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-checkbox">
+                <input type="checkbox" name="activate_flg">
+                <span>Activated</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Modal.close('formModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/devices.js"></script>
+</body>
+</html>

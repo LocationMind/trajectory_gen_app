@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offices - Master Data Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Master Data Manager
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link active">Offices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="vehicles.html" class="nav-link">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-primary); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="trajectory.html" class="nav-link">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Offices</h2>
+        <p class="page-subtitle">Manage branch offices and locations</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Import CSV
+        </button>
+        <input type="file" id="importFile" accept=".csv" style="display: none" onchange="importCSV(event)">
+        <button class="btn btn-secondary" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+        <button class="btn btn-secondary" onclick="clearData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Clear Data
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Office
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Company ID</th>
+              <th>Office Name</th>
+              <th>Abbreviation</th>
+              <th>Prefecture</th>
+              <th>City</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamic content -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add Office</h3>
+        <button class="modal-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="dataForm" onsubmit="saveRecord(event)">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="recordId">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Company ID <span class="required">*</span></label>
+              <input type="text" name="company_id" class="form-input" required placeholder="COMP001">
+              <small class="form-hint">会社識別子 (varchar100)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Office Name <span class="required">*</span></label>
+              <input type="text" name="office_name" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Name (Kana)</label>
+              <input type="text" name="office_name_kana" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Abbreviation</label>
+              <input type="text" name="abbreviation" class="form-input" placeholder="本社">
+              <small class="form-hint">略称</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Post Code</label>
+              <input type="text" name="post_code" class="form-input" placeholder="123-4567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Office Type <span class="required">*</span></label>
+              <select name="office_type" class="form-select" required>
+                <option value="">Select type...</option>
+                <option value="1">Headquarters</option>
+                <option value="2">Branch</option>
+                <option value="3">Warehouse</option>
+                <option value="4">Distribution Center</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prefecture ID <span class="required">*</span></label>
+              <input type="number" name="prefecture_id" class="form-input" required min="1" max="47" placeholder="13">
+              <small class="form-hint">都道府県コード (1-47)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prefecture</label>
+              <input type="text" name="prefecture" class="form-input" placeholder="東京都">
+            </div>
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input type="text" name="city" class="form-input" placeholder="千代田区">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Street Address</label>
+              <input type="text" name="street_address" class="form-input" placeholder="丸の内1-1-1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Building</label>
+              <input type="text" name="building" class="form-input" placeholder="○○ビル 5F">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="text" name="latitude" class="form-input" placeholder="35.6762">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="text" name="longitude" class="form-input" placeholder="139.6503">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Modal.close('formModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/offices.js"></script>
+</body>
+</html>

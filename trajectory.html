@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Individual Generation - Trajectory Generator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .map-container {
+      height: 450px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-default);
+    }
+    .location-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .route-info {
+      display: flex;
+      gap: 24px;
+      padding: 16px;
+      background: var(--bg-surface-active);
+      border-radius: 6px;
+      margin-top: 16px;
+    }
+    .route-info-item {
+      text-align: center;
+    }
+    .route-info-item .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .route-info-item .label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    .point-marker {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .point-marker.origin { background: #2ea043; }
+    .point-marker.destination { background: #f85149; }
+    .point-marker.gnss { background: #58a6ff; width: 8px; height: 8px; }
+    .point-marker.outlier { background: #d29922; }
+    .point-marker.break { background: #a371f7; }
+    .legend {
+      display: flex;
+      gap: 16px;
+      padding: 12px;
+      background: var(--bg-surface-active);
+      border-radius: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+    }
+    .progress-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .progress-overlay.active {
+      display: flex;
+    }
+    .progress-card {
+      background: var(--bg-surface);
+      padding: 32px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-surface-active);
+      border-radius: 4px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .gen-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+    @media (max-width: 1200px) {
+      .gen-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        Individual Generation
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="vehicles.html" class="nav-link">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-default); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="trajectory.html" class="nav-link active">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- API Key Warning -->
+    <div id="apiKeyWarning" class="card" style="display: none; border-color: var(--accent-red);">
+      <div class="card-body" style="text-align: center; padding: 32px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" width="48" height="48" style="margin-bottom: 16px;">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <h2 style="color: var(--accent-red); margin-bottom: 8px;">API Key Required</h2>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">Please configure your Google Maps API Key to use trajectory generation.</p>
+        <a href="settings.html" class="btn btn-primary">Go to Settings</a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Generate Single Trip</h2>
+          <p class="page-subtitle">Select origin, destination, and configure generation settings</p>
+        </div>
+      </div>
+
+      <div class="gen-layout">
+        <!-- Map Section -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Route Map</h3>
+          </div>
+          <div class="card-body">
+            <div class="location-input">
+              <select id="originSelect" class="form-control" onchange="selectGeofence('origin')">
+                <option value="">-- Select Origin Geofence --</option>
+              </select>
+              <span style="color: var(--text-secondary); white-space: nowrap;">or click map</span>
+            </div>
+            <div class="location-input">
+              <select id="destinationSelect" class="form-control" onchange="selectGeofence('destination')">
+                <option value="">-- Select Destination Geofence --</option>
+              </select>
+              <span style="color: var(--text-secondary); white-space: nowrap;">or click map</span>
+            </div>
+            
+            <div id="map" class="map-container"></div>
+            
+            <div class="legend">
+              <div class="legend-item">
+                <div class="point-marker origin"></div>
+                <span>Origin</span>
+              </div>
+              <div class="legend-item">
+                <div class="point-marker destination"></div>
+                <span>Destination</span>
+              </div>
+              <div class="legend-item">
+                <div class="point-marker gnss"></div>
+                <span>GNSS Point</span>
+              </div>
+              <div class="legend-item">
+                <div class="point-marker outlier"></div>
+                <span>Outlier</span>
+              </div>
+              <div class="legend-item">
+                <div class="point-marker break"></div>
+                <span>Break Point</span>
+              </div>
+              <div class="legend-item">
+                <div class="point-marker" style="background: #2ea043; width: 8px; height: 8px;"></div>
+                <span>Arrival Stay (15-60min)</span>
+              </div>
+            </div>
+            
+            <div id="routeInfo" class="route-info" style="display: none;">
+              <div class="route-info-item">
+                <div class="value" id="routeDistance">-</div>
+                <div class="label">Distance</div>
+              </div>
+              <div class="route-info-item">
+                <div class="value" id="routeDuration">-</div>
+                <div class="label">Est. Duration</div>
+              </div>
+              <div class="route-info-item">
+                <div class="value" id="pointCount">-</div>
+                <div class="label">Points</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Vehicle</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="vehicleSelect">Select Vehicle</label>
+                <select id="vehicleSelect" class="form-control" onchange="onVehicleChange()">
+                  <option value="">-- Select Vehicle --</option>
+                </select>
+                <small id="vehicleInfo" style="color: var(--text-secondary);"></small>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-2">
+            <div class="card-header">
+              <h3 class="card-title">Generation Settings</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="startDatetime">Start Date/Time</label>
+                <input type="datetime-local" id="startDatetime" class="form-control">
+              </div>
+              
+              <div class="form-group">
+                <label for="interval">Positioning Interval (sec)</label>
+                <input type="number" id="interval" class="form-control" min="1" max="60" value="10">
+              </div>
+              
+              <div class="form-group">
+                <label for="avgSpeed">Average Speed (km/h)</label>
+                <input type="number" id="avgSpeed" class="form-control" min="1" max="120" value="40">
+              </div>
+              
+              <div class="form-group">
+                <label for="breakTime">Break Time (min)</label>
+                <select id="breakTime" class="form-control">
+                  <option value="0">No break</option>
+                  <option value="5">5 min</option>
+                  <option value="10">10 min</option>
+                  <option value="15">15 min</option>
+                  <option value="20">20 min</option>
+                  <option value="30">30 min</option>
+                </select>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label for="minAccuracy">Min Accuracy (m)</label>
+                  <input type="number" id="minAccuracy" class="form-control" min="1" max="100" value="3">
+                </div>
+                <div class="form-group">
+                  <label for="maxAccuracy">Max Accuracy (m)</label>
+                  <input type="number" id="maxAccuracy" class="form-control" min="1" max="100" value="20">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="outlierRate">Outlier Rate (%)</label>
+                <input type="number" id="outlierRate" class="form-control" min="0" max="100" value="2" step="0.5">
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-2">
+            <div class="card-body">
+              <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="generateTrajectory()" id="generateBtn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Generate Trajectory
+              </button>
+              <button class="btn btn-secondary" style="width: 100%;" onclick="saveTrip()" id="saveBtn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Trip & Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Overlay -->
+    <div id="progressOverlay" class="progress-overlay">
+      <div class="progress-card">
+        <h3 id="progressTitle">Generating Points...</h3>
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+        <p id="progressText">0 / 0 points</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/trajectory.js"></script>
+</body>
+</html>

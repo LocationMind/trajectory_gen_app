@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicles - Master Data Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Master Data Manager
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="vehicles.html" class="nav-link active">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-primary); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="trajectory.html" class="nav-link">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">Vehicles</h2>
+        <p class="page-subtitle">Manage fleet vehicles information</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Import CSV
+        </button>
+        <input type="file" id="importFile" accept=".csv" style="display: none" onchange="importCSV(event)">
+        <button class="btn btn-secondary" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+        <button class="btn btn-secondary" onclick="clearData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Clear Data
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Vehicle
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Vehicle Name</th>
+              <th>Vehicle Number</th>
+              <th>Office</th>
+              <th>Model</th>
+              <th>Description</th>
+              <th>Fuel</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamic content -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add Vehicle</h3>
+        <button class="modal-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="dataForm" onsubmit="saveRecord(event)">
+        <div class="modal-body">
+          <input type="hidden" name="vehicle_id" id="recordId">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Vehicle Name</label>
+              <input type="text" name="vehicle_name" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle Number <span class="required">*</span></label>
+              <input type="text" name="vehicle_number" class="form-input" required placeholder="品川 500 あ 1234">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Office</label>
+              <select name="office_id" class="form-select" id="officeSelect">
+                <option value="">Select office...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Garage</label>
+              <input type="text" name="garage" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Model <span class="required">*</span></label>
+              <input type="text" name="model" class="form-input" required placeholder="ABC-DEF123">
+              <small class="form-hint">型式</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Model Number</label>
+              <input type="text" name="model_number" class="form-input" placeholder="12345">
+              <small class="form-hint">型式指定番号</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Model Description</label>
+              <input type="text" name="model_description" class="form-input" placeholder="トヨタ ハイエース">
+              <small class="form-hint">メーカー・車種など</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Calc Method</label>
+              <select name="calc_method" class="form-select">
+                <option value="">Select method...</option>
+                <option value="improved_ton_km">Improved Ton-km (改良トンキロ法)</option>
+                <option value="fuel_method">Fuel Method (燃料法)</option>
+                <option value="fuel_economy_method">Fuel Economy Method (燃費法)</option>
+              </select>
+              <small class="form-hint">CO2排出量計算方法</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fuel Type <span class="required">*</span></label>
+              <select name="fuel_code" class="form-select" required>
+                <option value="">Select fuel...</option>
+                <option value="1">Gasoline (ガソリン)</option>
+                <option value="2">Diesel (軽油)</option>
+                <option value="3">LPG</option>
+                <option value="4">CNG</option>
+                <option value="5">Electric (電気)</option>
+                <option value="6">Hybrid (ハイブリッド)</option>
+              </select>
+              <small class="form-hint">燃料コード (1-6の整数)</small>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="Modal.close('formModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/vehicles.js"></script>
+</body>
+</html>

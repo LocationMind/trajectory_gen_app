@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Trajectory Generator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .setup-steps {
+      counter-reset: step;
+    }
+    .setup-step {
+      position: relative;
+      padding-left: 48px;
+      margin-bottom: 24px;
+    }
+    .setup-step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .setup-step h4 {
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    .setup-step p, .setup-step ul {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .setup-step ul {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+    .setup-step li {
+      margin-bottom: 4px;
+    }
+    .setup-step code {
+      background: var(--bg-surface-active);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .setup-step a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+    .setup-step a:hover {
+      text-decoration: underline;
+    }
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .pricing-table th, .pricing-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-default);
+    }
+    .pricing-table th {
+      background: var(--bg-surface-active);
+      font-weight: 600;
+    }
+    .pricing-table tr:last-child td {
+      border-bottom: none;
+    }
+    .alert-warning {
+      background: rgba(210, 153, 34, 0.15);
+      border: 1px solid var(--accent-yellow);
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .alert-warning h4 {
+      color: var(--accent-yellow);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-warning p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .calculation-box {
+      background: var(--bg-surface-active);
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .calculation-box h4 {
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+    .calculation-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-muted);
+      font-size: 14px;
+    }
+    .calculation-row:last-child {
+      border-bottom: none;
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="vehicles.html" class="nav-link">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-default); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link active">Settings</a>
+        <a href="trajectory.html" class="nav-link">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h2 class="page-title">API Settings</h2>
+        <p class="page-subtitle">Configure APIs for map display and route calculation</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <!-- Left Column -->
+      <div>
+        <!-- OpenRouteService API Key Card (Primary for Routing) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🚗 OpenRouteService API Key (Routing)</h3>
+          </div>
+          <div class="card-body">
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+              <strong>Required for trajectory generation.</strong> OpenRouteService provides free routing API based on OpenStreetMap data.
+              No restrictions on storing generated data.
+            </p>
+            <form id="orsForm" onsubmit="saveOrsKey(event)">
+              <div class="form-group">
+                <label for="orsApiKey">API Key</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="password" id="orsApiKey" name="orsApiKey" class="form-control" 
+                         placeholder="Enter your OpenRouteService API Key" style="flex: 1;">
+                  <button type="button" class="btn btn-secondary" onclick="toggleOrsKeyVisibility()">
+                    <svg id="orsEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div id="orsKeyStatus" class="status-indicator" style="display: none; margin-bottom: 16px;"></div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  Save
+                </button>
+              </div>
+            </form>
+            
+            <div style="margin-top: 16px; padding: 12px; background: var(--bg-surface-active); border-radius: 6px; font-size: 13px;">
+              <strong>How to get your key:</strong>
+              <ol style="margin: 8px 0 0 20px; padding: 0;">
+                <li>Go to <a href="https://openrouteservice.org/dev/#/signup" target="_blank" style="color: var(--accent-blue);">openrouteservice.org</a></li>
+                <li>Sign up with email (free)</li>
+                <li>Go to Dashboard → Tokens</li>
+                <li>Create a new token</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Data Management Card -->
+        <div class="card mt-2">
+          <div class="card-header">
+            <h3 class="card-title">Data Management</h3>
+          </div>
+          <div class="card-body">
+            <p style="margin-bottom: 16px; color: var(--text-secondary); font-size: 14px;">
+              Manage trajectory-related data stored in IndexedDB.
+            </p>
+            <div class="btn-group" style="flex-wrap: wrap;">
+              <button class="btn btn-secondary" onclick="exportSettings()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export
+              </button>
+              <button class="btn btn-secondary" onclick="document.getElementById('importSettings').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Import
+              </button>
+              <input type="file" id="importSettings" accept=".csv" style="display: none" onchange="importSettings(event)">
+              <button class="btn btn-secondary" onclick="clearTripsData()" style="color: var(--accent-red);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Clear Trips
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Info Card -->
+        <div class="card mt-2">
+          <div class="card-header">
+            <h3 class="card-title">API Usage & Pricing</h3>
+          </div>
+          <div class="card-body">
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
+              This app uses <strong>OpenRouteService</strong> for routing and <strong>Leaflet + OpenStreetMap</strong> for map display.
+            </p>
+            
+            <table class="pricing-table">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Free Tier</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>OpenRouteService</strong> (Routing)</td>
+                  <td style="color: var(--accent-green);">2,000 req/day</td>
+                  <td>No credit card required</td>
+                </tr>
+                <tr>
+                  <td><strong>Leaflet + OSM</strong> (Map Display)</td>
+                  <td style="color: var(--accent-green);">Unlimited</td>
+                  <td>Free, open source</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="calculation-box">
+              <h4>OpenRouteService Free Tier</h4>
+              <div class="calculation-row">
+                <span>Daily limit</span>
+                <span>2,000 requests</span>
+              </div>
+              <div class="calculation-row">
+                <span>Monthly estimate</span>
+                <span>~60,000 requests</span>
+              </div>
+              <div class="calculation-row">
+                <span>Data storage</span>
+                <span style="color: var(--accent-green);">✓ Allowed</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; padding: 16px; background: rgba(46, 160, 67, 0.1); border: 1px solid var(--accent-green); border-radius: 6px;">
+              <h4 style="color: var(--accent-green); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Why OpenRouteService?
+              </h4>
+              <p style="color: var(--text-secondary); font-size: 14px;">
+                • <strong>No restrictions</strong> on storing generated GNSS data<br>
+                • Based on <strong>OpenStreetMap</strong> (open data)<br>
+                • <strong>No credit card</strong> required for free tier<br>
+                • Simple email signup
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Setup Guide -->
+      <div>
+        <!-- OpenRouteService Setup -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🚗 OpenRouteService Setup (Required)</h3>
+          </div>
+          <div class="card-body">
+            <div class="setup-steps">
+              <div class="setup-step">
+                <h4>Sign Up</h4>
+                <p>Go to <a href="https://openrouteservice.org/dev/#/signup" target="_blank">openrouteservice.org</a> and sign up with your email. No credit card required.</p>
+              </div>
+
+              <div class="setup-step">
+                <h4>Verify Email</h4>
+                <p>Check your email and click the verification link to activate your account.</p>
+              </div>
+
+              <div class="setup-step">
+                <h4>Create API Token</h4>
+                <p>Go to <strong>Dashboard → Tokens</strong>:</p>
+                <ul>
+                  <li>Click <strong>"Request a token"</strong></li>
+                  <li>Enter a name (e.g., "Trajectory Generator")</li>
+                  <li>Copy the generated token</li>
+                </ul>
+              </div>
+
+              <div class="setup-step">
+                <h4>Enter Token</h4>
+                <p>Paste your token in the <strong>OpenRouteService API Key</strong> field above and click <strong>"Save"</strong>.</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; padding: 16px; background: var(--bg-surface-active); border-radius: 6px;">
+              <h4 style="margin-bottom: 8px;">OpenRouteService Links</h4>
+              <ul style="font-size: 14px; padding-left: 20px;">
+                <li><a href="https://openrouteservice.org/dev/#/signup" target="_blank" style="color: var(--accent-blue);">Sign Up</a></li>
+                <li><a href="https://openrouteservice.org/dev/#/home" target="_blank" style="color: var(--accent-blue);">Dashboard</a></li>
+                <li><a href="https://openrouteservice.org/dev/#/api-docs/v2/directions" target="_blank" style="color: var(--accent-blue);">API Documentation</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- Attribution -->
+    <div style="text-align: center; padding: 16px; color: var(--text-secondary); font-size: 12px;">
+      Routing powered by <a href="https://openrouteservice.org/" target="_blank" style="color: var(--accent-blue);">openrouteservice.org</a> | 
+      Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" style="color: var(--accent-blue);">OpenStreetMap</a> contributors
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

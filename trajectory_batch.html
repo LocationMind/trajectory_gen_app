@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Generation - Trajectory Generator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .batch-settings {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .generation-log {
+      max-height: 300px;
+      overflow-y: auto;
+      background: var(--bg-surface-active);
+      border-radius: 6px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    .log-entry.success { color: var(--accent-green); }
+    .log-entry.error { color: var(--accent-red); }
+    .log-entry.info { color: var(--text-secondary); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 800px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .stat-card {
+      background: var(--bg-surface-active);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .progress-bar-container {
+      background: var(--bg-surface-active);
+      border-radius: 8px;
+      height: 24px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Batch Generation
+      </h1>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="vehicles.html" class="nav-link">Vehicles</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="geofences.html" class="nav-link">Geofences</a>
+        <span style="border-left: 1px solid var(--border-default); margin: 0 8px;"></span>
+        <a href="settings.html" class="nav-link">Settings</a>
+        <a href="trajectory.html" class="nav-link">Individual Gen</a>
+        <a href="trajectory_batch.html" class="nav-link active">Batch Gen</a>
+        <a href="trips.html" class="nav-link">Trips</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- API Key Warning -->
+    <div id="apiKeyWarning" class="card" style="display: none; border-color: var(--accent-red);">
+      <div class="card-body" style="text-align: center; padding: 32px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" width="48" height="48" style="margin-bottom: 16px;">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <h2 style="color: var(--accent-red); margin-bottom: 8px;">API Key Required</h2>
+        <p style="margin-bottom: 16px; color: var(--text-secondary);">Please configure your Google Maps API Key to use trajectory generation.</p>
+        <a href="settings.html" class="btn btn-primary">Go to Settings</a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title">Random Batch Generation</h2>
+          <p class="page-subtitle">Generate random trajectories for multiple days automatically</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Batch Settings</h3>
+        </div>
+        <div class="card-body">
+          <div class="batch-settings">
+            <div class="form-group">
+              <label for="vehicleSelect">Vehicle</label>
+              <select id="vehicleSelect" class="form-control">
+                <option value="">-- Select Vehicle --</option>
+              </select>
+              <small id="vehicleInfo" style="color: var(--text-secondary);"></small>
+            </div>
+            
+            <div class="form-group">
+              <label for="tripsPerDay">Trips per Day</label>
+              <select id="tripsPerDay" class="form-control">
+                <option value="1">1 trip</option>
+                <option value="2">2 trips</option>
+                <option value="3" selected>3 trips</option>
+                <option value="4">4 trips</option>
+                <option value="5">5 trips</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="dateFrom">Start Date</label>
+              <input type="date" id="dateFrom" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label for="dateTo">End Date</label>
+              <input type="date" id="dateTo" class="form-control">
+            </div>
+          </div>
+          
+          <div style="margin-top: 24px; padding: 16px; background: var(--bg-surface-active); border-radius: 6px;">
+            <h4 style="margin-bottom: 12px;">Fixed Generation Settings</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; color: var(--text-secondary); font-size: 0.875rem;">
+              <div><strong>Interval:</strong> 10 sec</div>
+              <div><strong>Accuracy:</strong> 3-20 m</div>
+              <div><strong>Break:</strong> 0/10/20/30 min (random)</div>
+              <div><strong>Speed:</strong> 30-60 km/h (random)</div>
+              <div><strong>Outlier Rate:</strong> 0%</div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 24px;">
+            <button class="btn btn-primary" onclick="startBatchGeneration()" id="startBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Start Batch Generation
+            </button>
+            <button class="btn btn-secondary" onclick="stopBatchGeneration()" id="stopBtn" style="display: none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Section -->
+      <div id="progressSection" class="card mt-2" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">Generation Progress</h3>
+        </div>
+        <div class="card-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="statDays">0</div>
+              <div class="stat-label">Days Processed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statTrips">0</div>
+              <div class="stat-label">Trips Generated</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statPoints">0</div>
+              <div class="stat-label">Total Points</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statErrors">0</div>
+              <div class="stat-label">Errors</div>
+            </div>
+          </div>
+          
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%">0%</div>
+          </div>
+          <p id="progressText" style="text-align: center; color: var(--text-secondary);">Ready to start...</p>
+          
+          <div class="generation-log" id="logContainer">
+            <div class="log-entry info">Batch generation log will appear here...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Attribution -->
+    <div style="text-align: center; padding: 16px; color: var(--text-secondary); font-size: 12px;">
+      Routing by <a href="https://openrouteservice.org/" target="_blank" style="color: var(--accent-blue);">openrouteservice.org</a> | 
+      Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" style="color: var(--accent-blue);">OpenStreetMap</a> contributors
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/trajectory_batch.js"></script>
+</body>
+</html>
