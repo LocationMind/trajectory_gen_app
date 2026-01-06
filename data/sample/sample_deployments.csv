@@ -1,0 +1,9 @@
+id,serial_no,vehicle_id,description,deploy_start_datetime,deploy_end_datetime,device_status
+1,DEV-001,1,Tokyo Truck 1 - Primary Device,2025-01-01T09:00:00,,1
+2,DEV-002,2,Tokyo Truck 2 - Primary Device,2025-01-01T09:00:00,,1
+3,DEV-003,3,Tokyo Truck 3 - Primary Device,2025-01-02T09:00:00,,1
+4,DEV-004,4,Nagoya Truck 1 - Primary Device,2025-01-03T09:00:00,,1
+5,DEV-005,5,Nagoya Truck 2 - Primary Device,2025-01-03T09:00:00,,1
+6,DEV-006,6,Osaka Truck 1 - Primary Device,2025-01-04T09:00:00,,1
+7,DEV-007,7,Osaka Truck 2 - Primary Device,2025-01-04T09:00:00,,1
+

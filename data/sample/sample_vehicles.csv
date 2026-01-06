@@ -1,0 +1,12 @@
+vehicle_id,vehicle_name,vehicle_number,office_id,garage,calc_method,model,model_number,model_description,fuel_code
+1,Tokyo Truck 1,Tokyo 100 A 1234,1,Tokyo Warehouse,improved_ton_km,TRH200,12345,Toyota Hiace Van,2
+2,Tokyo Truck 2,Tokyo 100 A 1235,1,Tokyo Warehouse,improved_ton_km,TRH200,12345,Toyota Hiace Van,2
+3,Tokyo Truck 3,Tokyo 100 A 1236,1,Tokyo Warehouse,improved_ton_km,NV350,23456,Nissan Caravan,2
+4,Nagoya Truck 1,Nagoya 300 B 5678,3,Nagoya Distribution Center,fuel_method,DUTY,34567,Isuzu Elf,2
+5,Nagoya Truck 2,Nagoya 300 B 5679,3,Nagoya Distribution Center,fuel_method,DUTY,34567,Isuzu Elf,2
+6,Osaka Truck 1,Osaka 400 C 9012,5,Osaka Warehouse,fuel_economy_method,CANTER,45678,Mitsubishi Fuso Canter,2
+7,Osaka Truck 2,Osaka 400 C 9013,5,Osaka Warehouse,fuel_economy_method,CANTER,45678,Mitsubishi Fuso Canter,2
+8,EV Vehicle 1,Tokyo 500 E 1111,1,Tokyo Warehouse,improved_ton_km,MINICAB-MiEV,56789,Mitsubishi Minicab MiEV,5
+9,Hybrid Vehicle 1,Nagoya 500 H 2222,3,Nagoya Distribution Center,fuel_method,TOWNACE,67890,Toyota Townace Hybrid,6
+10,LPG Vehicle 1,Osaka 500 L 3333,5,Osaka Warehouse,fuel_economy_method,PROBOX,78901,Toyota Probox LPG,3
+

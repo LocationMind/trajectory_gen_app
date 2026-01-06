@@ -1,0 +1,8 @@
+id,company_id,office_name,office_name_kana,abbreviation,post_code,prefecture_id,prefecture,city,street_address,building,latitude,longitude,office_type
+1,COMP001,Tokyo Headquarters,トウキョウホンシャ,HQ,100-0005,13,Tokyo,Chiyoda-ku,1-1-1 Marunouchi,Marunouchi Bldg 10F,35.6812,139.7671,1
+2,COMP001,Tokyo Warehouse,トウキョウソウコ,TKY-WH,135-0061,13,Tokyo,Koto-ku,3-5-7 Toyosu,Toyosu Logistics Center,35.6527,139.7936,3
+3,COMP001,Nagoya Branch,ナゴヤシテン,NGY,460-0008,23,Aichi,Nagoya-shi Naka-ku,4-1-1 Sakae,Sakae Tower 5F,35.1709,136.9066,2
+4,COMP001,Nagoya Distribution Center,ナゴヤブンパイセンター,NGY-DC,455-0848,23,Aichi,Nagoya-shi Minato-ku,2-3-1 Kinjo,Nagoya Port DC,35.1073,136.8862,4
+5,COMP001,Osaka Branch,オオサカシテン,OSK,530-0001,27,Osaka,Osaka-shi Kita-ku,1-8-1 Umeda,Grand Front Osaka 8F,34.7055,135.4983,2
+6,COMP001,Osaka Warehouse,オオサカソウコ,OSK-WH,552-0021,27,Osaka,Osaka-shi Minato-ku,1-5-10 Chikko,Osaka Bay Logistics,34.6618,135.4578,3
+

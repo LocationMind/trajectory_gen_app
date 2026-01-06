@@ -34,7 +34,7 @@ A browser-based application for generating simulated GNSS trajectory data for ve
 1. Open `index.html` in a modern browser (Chrome recommended)
 2. Get a free **OpenRouteService API key** at [openrouteservice.org](https://openrouteservice.org/dev/#/signup)
 3. Enter your API key in **Settings**
-4. Create master data (Offices → Devices → Vehicles → Deployments → Geofences)
+4. Import sample CSV files from `data/sample/` (Offices → Devices → Vehicles → Deployments → Geofences)
 5. Generate trajectories using Individual or Batch generation
 6. View and export your data
 
@@ -42,7 +42,7 @@ A browser-based application for generating simulated GNSS trajectory data for ve
 
 ## Step-by-Step Guide
 
-This section provides detailed instructions from creating master data to generating trajectory data.
+This section provides detailed instructions from importing master data to generating trajectory data.
 
 ### Step 1: Configure OpenRouteService API Key
 
@@ -51,87 +51,44 @@ This section provides detailed instructions from creating master data to generat
 3. Go to Dashboard → Tokens and create an API token
 4. Enter the API key in the app's **Settings** page and save
 
-### Step 2: Register Office Master Data
+### Step 2: Import Master Data from Sample CSV Files
 
-1. Open the **Offices** page
-2. Click the "Add Office" button
-3. Enter the required fields:
-   - Company ID (company identifier)
-   - Office Name
-   - Prefecture ID (prefecture code 1-47)
-   - Office Type
-4. Enter latitude/longitude (required if associating with geofences)
-5. Click "Save"
+Sample CSV files are provided in the `data/sample/` directory. Import them in the following order:
 
-### Step 3: Register Device Master Data
+| Order | File                     | Page        | Contents                                       |
+| ----- | ------------------------ | ----------- | ---------------------------------------------- |
+| 1     | `sample_offices.csv`     | Offices     | 6 offices (Tokyo, Nagoya, Osaka)               |
+| 2     | `sample_devices.csv`     | Devices     | 10 tracking devices                            |
+| 3     | `sample_vehicles.csv`    | Vehicles    | 10 vehicles (trucks, EV, hybrid, LPG)          |
+| 4     | `sample_deployments.csv` | Deployments | 7 device-vehicle mappings                      |
+| 5     | `sample_geofences.csv`   | Geofences   | 63 geofences (Tokyo/Nagoya/Osaka ward offices) |
 
-1. Open the **Devices** page
-2. Click the "Add Device" button
-3. Enter the required fields:
-   - Serial No (device serial number)
-   - IMEI (15-digit International Mobile Equipment Identity)
-   - IMSI (up to 15-digit SIM identifier)
-4. Optionally enter Firmware ID and version
-5. Click "Save"
+**Import Steps (repeat for each file):**
 
-### Step 4: Register Vehicle Master Data
+1. Open the corresponding page (e.g., **Offices**)
+2. Click the **"Import CSV"** button
+3. Select the sample CSV file
+4. Verify the imported data in the table
 
-1. Open the **Vehicles** page
-2. Click the "Add Vehicle" button
-3. Enter the required fields:
-   - Vehicle Number (license plate)
-   - Model (model code)
-   - Fuel Type
-4. Optionally associate with an Office
-5. Click "Save"
+> **Important**: Import in order (1→5) because Vehicles reference Offices, and Deployments reference both Devices and Vehicles.
 
-### Step 5: Register Device Deployments
+### Step 3: Verify Imported Data
 
-1. Open the **Deployments** page
-2. Click the "Add Deployment" button
-3. Select/enter the following:
-   - Device (registered in Step 3)
-   - Vehicle (registered in Step 4)
-   - Deploy Start (deployment start datetime)
-4. Click "Save"
+After importing all sample files, you should have:
+- **6 Offices**: Tokyo HQ, Tokyo Warehouse, Nagoya Branch, Nagoya DC, Osaka Branch, Osaka Warehouse
+- **10 Devices**: DEV-001 to DEV-010
+- **10 Vehicles**: Various trucks and special vehicles (EV, Hybrid, LPG)
+- **7 Deployments**: 7 devices deployed to 7 vehicles
+- **63 Geofences**: Ward offices in Tokyo (23), Nagoya (16), and Osaka (24)
 
-> **Important**: A device must be deployed to a vehicle before trajectory data can be generated.
+### Step 4: Generate Trajectory Data
 
-### Step 6: Register Geofence Master Data
-
-Geofences are used as origin and destination points for trajectories.
-
-#### Option 1: Import Sample Data
-
-Sample data is provided in the `data/sample/` directory:
-
-| File                   | Contents                                                           |
-| ---------------------- | ------------------------------------------------------------------ |
-| `sample_geofences.csv` | Ward offices of Tokyo (23), Nagoya (16), and Osaka (24) - 63 total |
-
-1. Open the **Geofences** page
-2. Click the "Import CSV" button
-3. Select `data/sample/sample_geofences.csv`
-4. After import, geofences will be displayed on the map
-
-#### Option 2: Create Manually
-
-1. Open the **Geofences** page
-2. Use the polygon tool (top-left icon) on the map to draw an area
-3. Enter the following in the form:
-   - Geofence Name
-   - Place ID
-   - Geofence Number
-4. Click "Save"
-
-### Step 7: Generate Trajectory Data
-
-Once master data is prepared, you can generate trajectory data.
+Once master data is imported, you can generate trajectory data.
 
 #### Individual Generation
 
 1. Open the **Individual Gen** page
-2. Select a Vehicle
+2. Select a Vehicle (e.g., "Tokyo Truck 1")
 3. Click on origin and destination geofences on the map (or select from dropdowns)
 4. Configure generation parameters:
    - Start DateTime
@@ -150,11 +107,21 @@ Once master data is prepared, you can generate trajectory data.
 4. Click "Start Batch Generation"
 5. After completion, verify on the Trips page
 
-### Step 8: Verify and Export Generated Data
+### Step 5: Verify and Export Generated Data
 
 1. View generated trips on the **Trips** page
 2. Display routes and GNSS points on the map
 3. Click "Export" to download CSV files
+
+### Creating Your Own Master Data (Optional)
+
+If you prefer to create master data manually instead of importing CSV files:
+
+1. **Offices**: Click "Add Office" and fill in company_id, office_name, prefecture_id, office_type
+2. **Devices**: Click "Add Device" and fill in serial_no, IMEI (15 digits), IMSI
+3. **Vehicles**: Click "Add Vehicle" and fill in vehicle_number, model, fuel_code
+4. **Deployments**: Click "Add Deployment" to link a device to a vehicle
+5. **Geofences**: Draw polygons on the map or enter GeoJSON geometry manually
 
 ---
 
@@ -213,7 +180,11 @@ trajectory_gen_app/
 │   └── trips.js
 └── data/
     └── sample/
-        └── sample_geofences.csv  # Sample geofences (Tokyo/Nagoya/Osaka)
+        ├── sample_offices.csv      # 6 sample offices
+        ├── sample_devices.csv      # 10 sample devices
+        ├── sample_vehicles.csv     # 10 sample vehicles
+        ├── sample_deployments.csv  # 7 device-vehicle mappings
+        └── sample_geofences.csv    # 63 geofences (Tokyo/Nagoya/Osaka)
 ```
 
 ---
@@ -391,10 +362,17 @@ All data exports to CSV format compatible with database import.
 
 ### Sample Files
 
-`data/sample/sample_geofences.csv` includes 63 pre-defined geofences:
-- Tokyo 23 ward offices
-- Nagoya 16 ward offices
-- Osaka 24 ward offices
+All sample files are located in `data/sample/`:
+
+| File                     | Records | Description                                    |
+| ------------------------ | ------- | ---------------------------------------------- |
+| `sample_offices.csv`     | 6       | HQ, branches, warehouses in Tokyo/Nagoya/Osaka |
+| `sample_devices.csv`     | 10      | Tracking devices (7 active, 3 spare)           |
+| `sample_vehicles.csv`    | 10      | Trucks, EV, Hybrid, LPG vehicles               |
+| `sample_deployments.csv` | 7       | Device-to-vehicle mappings                     |
+| `sample_geofences.csv`   | 63      | Ward offices (Tokyo 23, Nagoya 16, Osaka 24)   |
+
+Import these files in order to quickly set up a working environment.
 
 ---
 
