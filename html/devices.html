@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offices - Master Data Manager</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Devices - Master Data Manager</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <!-- Header -->
@@ -18,9 +18,9 @@
         Master Data Manager
       </h1>
       <nav class="nav">
-        <a href="index.html" class="nav-link">Dashboard</a>
-        <a href="offices.html" class="nav-link active">Offices</a>
-        <a href="devices.html" class="nav-link">Devices</a>
+        <a href="../index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="devices.html" class="nav-link active">Devices</a>
         <a href="vehicles.html" class="nav-link">Vehicles</a>
         <a href="deployments.html" class="nav-link">Deployments</a>
         <a href="geofences.html" class="nav-link">Geofences</a>
@@ -37,8 +37,8 @@
   <main class="container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Offices</h2>
-        <p class="page-subtitle">Manage branch offices and locations</p>
+        <h2 class="page-title">Devices</h2>
+        <p class="page-subtitle">Manage tracking devices and sensors</p>
       </div>
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
@@ -70,7 +70,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Office
+          Add Device
         </button>
       </div>
     </div>
@@ -81,15 +81,14 @@
         <table class="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Company ID</th>
-              <th>Office Name</th>
-              <th>Abbreviation</th>
-              <th>Prefecture</th>
-              <th>City</th>
-              <th>Latitude</th>
-              <th>Longitude</th>
-              <th>Type</th>
+              <th>Serial No</th>
+              <th>IMEI</th>
+              <th>IMSI</th>
+              <th>FW ID</th>
+              <th>FW Version</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Activate Date</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -105,7 +104,7 @@
   <div class="modal-overlay" id="formModal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">Add Office</h3>
+        <h3 class="modal-title" id="modalTitle">Add Device</h3>
         <button class="modal-close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -115,68 +114,46 @@
       </div>
       <form id="dataForm" onsubmit="saveRecord(event)">
         <div class="modal-body">
-          <input type="hidden" name="id" id="recordId">
+          <input type="hidden" name="original_serial_no" id="originalSerialNo">
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Company ID <span class="required">*</span></label>
-              <input type="text" name="company_id" class="form-input" required placeholder="COMP001">
-              <small class="form-hint">会社識別子 (varchar100)</small>
+              <label class="form-label">Serial No <span class="required">*</span></label>
+              <input type="text" name="serial_no" class="form-input" required placeholder="DEV-001">
+              <small class="form-hint">デバイスシリアル番号 (varchar100)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Office Name <span class="required">*</span></label>
-              <input type="text" name="office_name" class="form-input" required>
+              <label class="form-label">IMEI <span class="required">*</span></label>
+              <input type="number" name="imei" class="form-input" required placeholder="123456789012345">
+              <small class="form-hint">15桁の国際モバイル機器識別番号 (bigint)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Name (Kana)</label>
-              <input type="text" name="office_name_kana" class="form-input">
+              <label class="form-label">IMSI <span class="required">*</span></label>
+              <input type="number" name="imsi" class="form-input" required placeholder="440201234567890">
+              <small class="form-hint">最大15桁のSIM識別番号 (bigint)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Abbreviation</label>
-              <input type="text" name="abbreviation" class="form-input" placeholder="本社">
-              <small class="form-hint">略称</small>
+              <label class="form-label">Firmware ID</label>
+              <input type="text" name="fw_id" class="form-input" placeholder="FW-001">
+              <small class="form-hint">デバイス固有のファームウェア識別子 (varchar100)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Post Code</label>
-              <input type="text" name="post_code" class="form-input" placeholder="123-4567">
+              <label class="form-label">Firmware Version</label>
+              <input type="text" name="fw_version" class="form-input" placeholder="1.0.0">
+              <small class="form-hint">ファームウェアバージョン (varchar100)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Office Type <span class="required">*</span></label>
-              <select name="office_type" class="form-select" required>
-                <option value="">Select type...</option>
-                <option value="1">Headquarters</option>
-                <option value="2">Branch</option>
-                <option value="3">Warehouse</option>
-                <option value="4">Distribution Center</option>
-              </select>
+              <label class="form-label">Activate Date</label>
+              <input type="datetime-local" name="activate_date" class="form-input">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-textarea" rows="3"></textarea>
             </div>
             <div class="form-group">
-              <label class="form-label">Prefecture ID <span class="required">*</span></label>
-              <input type="number" name="prefecture_id" class="form-input" required min="1" max="47" placeholder="13">
-              <small class="form-hint">都道府県コード (1-47)</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Prefecture</label>
-              <input type="text" name="prefecture" class="form-input" placeholder="東京都">
-            </div>
-            <div class="form-group">
-              <label class="form-label">City</label>
-              <input type="text" name="city" class="form-input" placeholder="千代田区">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Street Address</label>
-              <input type="text" name="street_address" class="form-input" placeholder="丸の内1-1-1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Building</label>
-              <input type="text" name="building" class="form-input" placeholder="○○ビル 5F">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Latitude</label>
-              <input type="text" name="latitude" class="form-input" placeholder="35.6762">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Longitude</label>
-              <input type="text" name="longitude" class="form-input" placeholder="139.6503">
+              <label class="form-checkbox">
+                <input type="checkbox" name="activate_flg">
+                <span>Activated</span>
+              </label>
             </div>
           </div>
         </div>
@@ -188,7 +165,7 @@
     </div>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/offices.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/devices.js"></script>
 </body>
 </html>

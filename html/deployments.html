@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Devices - Master Data Manager</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Device Deployments - Master Data Manager</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <!-- Header -->
@@ -18,11 +18,11 @@
         Master Data Manager
       </h1>
       <nav class="nav">
-        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="../index.html" class="nav-link">Dashboard</a>
         <a href="offices.html" class="nav-link">Offices</a>
-        <a href="devices.html" class="nav-link active">Devices</a>
+        <a href="devices.html" class="nav-link">Devices</a>
         <a href="vehicles.html" class="nav-link">Vehicles</a>
-        <a href="deployments.html" class="nav-link">Deployments</a>
+        <a href="deployments.html" class="nav-link active">Deployments</a>
         <a href="geofences.html" class="nav-link">Geofences</a>
         <span style="border-left: 1px solid var(--border-primary); margin: 0 8px;"></span>
         <a href="settings.html" class="nav-link">Settings</a>
@@ -37,8 +37,8 @@
   <main class="container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Devices</h2>
-        <p class="page-subtitle">Manage tracking devices and sensors</p>
+        <h2 class="page-title">Device Deployments</h2>
+        <p class="page-subtitle">Map tracking devices to vehicles</p>
       </div>
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
@@ -70,9 +70,17 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Device
+          Add Deployment
         </button>
       </div>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-info mb-2" id="infoAlert" style="display: none;">
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/>
+      </svg>
+      <span id="infoMessage"></span>
     </div>
 
     <!-- Data Table -->
@@ -81,14 +89,14 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Serial No</th>
-              <th>IMEI</th>
-              <th>IMSI</th>
-              <th>FW ID</th>
-              <th>FW Version</th>
+              <th>ID</th>
+              <th>Device (Serial No)</th>
+              <th>Vehicle</th>
               <th>Description</th>
-              <th>Status</th>
-              <th>Activate Date</th>
+              <th>Deploy Start</th>
+              <th>Deploy End</th>
+              <th>Device Status</th>
+              <th>Active</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -104,7 +112,7 @@
   <div class="modal-overlay" id="formModal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">Add Device</h3>
+        <h3 class="modal-title" id="modalTitle">Add Deployment</h3>
         <button class="modal-close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -114,46 +122,36 @@
       </div>
       <form id="dataForm" onsubmit="saveRecord(event)">
         <div class="modal-body">
-          <input type="hidden" name="original_serial_no" id="originalSerialNo">
+          <input type="hidden" name="id" id="recordId">
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Serial No <span class="required">*</span></label>
-              <input type="text" name="serial_no" class="form-input" required placeholder="DEV-001">
-              <small class="form-hint">デバイスシリアル番号 (varchar100)</small>
+              <label class="form-label">Device <span class="required">*</span></label>
+              <select name="serial_no" class="form-select" id="deviceSelect" required>
+                <option value="">Select device...</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label">IMEI <span class="required">*</span></label>
-              <input type="number" name="imei" class="form-input" required placeholder="123456789012345">
-              <small class="form-hint">15桁の国際モバイル機器識別番号 (bigint)</small>
+              <label class="form-label">Vehicle <span class="required">*</span></label>
+              <select name="vehicle_id" class="form-select" id="vehicleSelect" required>
+                <option value="">Select vehicle...</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label">IMSI <span class="required">*</span></label>
-              <input type="number" name="imsi" class="form-input" required placeholder="440201234567890">
-              <small class="form-hint">最大15桁のSIM識別番号 (bigint)</small>
+              <label class="form-label">Deploy Start <span class="required">*</span></label>
+              <input type="datetime-local" name="deploy_start_datetime" class="form-input" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Firmware ID</label>
-              <input type="text" name="fw_id" class="form-input" placeholder="FW-001">
-              <small class="form-hint">デバイス固有のファームウェア識別子 (varchar100)</small>
+              <label class="form-label">Deploy End</label>
+              <input type="datetime-local" name="deploy_end_datetime" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">Firmware Version</label>
-              <input type="text" name="fw_version" class="form-input" placeholder="1.0.0">
-              <small class="form-hint">ファームウェアバージョン (varchar100)</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Activate Date</label>
-              <input type="datetime-local" name="activate_date" class="form-input">
+              <label class="form-label">Device Status</label>
+              <input type="number" name="device_status" class="form-input" placeholder="0">
+              <small class="form-hint">デバイス状態コード (integer)</small>
             </div>
             <div class="form-group full-width">
               <label class="form-label">Description</label>
               <textarea name="description" class="form-textarea" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-checkbox">
-                <input type="checkbox" name="activate_flg">
-                <span>Activated</span>
-              </label>
             </div>
           </div>
         </div>
@@ -165,7 +163,7 @@
     </div>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/devices.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/deployments.js"></script>
 </body>
 </html>

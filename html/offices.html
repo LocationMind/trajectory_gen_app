@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Device Deployments - Master Data Manager</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Offices - Master Data Manager</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <!-- Header -->
@@ -18,11 +18,11 @@
         Master Data Manager
       </h1>
       <nav class="nav">
-        <a href="index.html" class="nav-link">Dashboard</a>
-        <a href="offices.html" class="nav-link">Offices</a>
+        <a href="../index.html" class="nav-link">Dashboard</a>
+        <a href="offices.html" class="nav-link active">Offices</a>
         <a href="devices.html" class="nav-link">Devices</a>
         <a href="vehicles.html" class="nav-link">Vehicles</a>
-        <a href="deployments.html" class="nav-link active">Deployments</a>
+        <a href="deployments.html" class="nav-link">Deployments</a>
         <a href="geofences.html" class="nav-link">Geofences</a>
         <span style="border-left: 1px solid var(--border-primary); margin: 0 8px;"></span>
         <a href="settings.html" class="nav-link">Settings</a>
@@ -37,8 +37,8 @@
   <main class="container">
     <div class="page-header">
       <div>
-        <h2 class="page-title">Device Deployments</h2>
-        <p class="page-subtitle">Map tracking devices to vehicles</p>
+        <h2 class="page-title">Offices</h2>
+        <p class="page-subtitle">Manage branch offices and locations</p>
       </div>
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
@@ -70,17 +70,9 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Deployment
+          Add Office
         </button>
       </div>
-    </div>
-
-    <!-- Info Alert -->
-    <div class="alert alert-info mb-2" id="infoAlert" style="display: none;">
-      <svg viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/>
-      </svg>
-      <span id="infoMessage"></span>
     </div>
 
     <!-- Data Table -->
@@ -90,13 +82,14 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Device (Serial No)</th>
-              <th>Vehicle</th>
-              <th>Description</th>
-              <th>Deploy Start</th>
-              <th>Deploy End</th>
-              <th>Device Status</th>
-              <th>Active</th>
+              <th>Company ID</th>
+              <th>Office Name</th>
+              <th>Abbreviation</th>
+              <th>Prefecture</th>
+              <th>City</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Type</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -112,7 +105,7 @@
   <div class="modal-overlay" id="formModal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">Add Deployment</h3>
+        <h3 class="modal-title" id="modalTitle">Add Office</h3>
         <button class="modal-close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -125,33 +118,65 @@
           <input type="hidden" name="id" id="recordId">
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Device <span class="required">*</span></label>
-              <select name="serial_no" class="form-select" id="deviceSelect" required>
-                <option value="">Select device...</option>
+              <label class="form-label">Company ID <span class="required">*</span></label>
+              <input type="text" name="company_id" class="form-input" required placeholder="COMP001">
+              <small class="form-hint">会社識別子 (varchar100)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Office Name <span class="required">*</span></label>
+              <input type="text" name="office_name" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Name (Kana)</label>
+              <input type="text" name="office_name_kana" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Abbreviation</label>
+              <input type="text" name="abbreviation" class="form-input" placeholder="本社">
+              <small class="form-hint">略称</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Post Code</label>
+              <input type="text" name="post_code" class="form-input" placeholder="123-4567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Office Type <span class="required">*</span></label>
+              <select name="office_type" class="form-select" required>
+                <option value="">Select type...</option>
+                <option value="1">Headquarters</option>
+                <option value="2">Branch</option>
+                <option value="3">Warehouse</option>
+                <option value="4">Distribution Center</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Vehicle <span class="required">*</span></label>
-              <select name="vehicle_id" class="form-select" id="vehicleSelect" required>
-                <option value="">Select vehicle...</option>
-              </select>
+              <label class="form-label">Prefecture ID <span class="required">*</span></label>
+              <input type="number" name="prefecture_id" class="form-input" required min="1" max="47" placeholder="13">
+              <small class="form-hint">都道府県コード (1-47)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">Deploy Start <span class="required">*</span></label>
-              <input type="datetime-local" name="deploy_start_datetime" class="form-input" required>
+              <label class="form-label">Prefecture</label>
+              <input type="text" name="prefecture" class="form-input" placeholder="東京都">
             </div>
             <div class="form-group">
-              <label class="form-label">Deploy End</label>
-              <input type="datetime-local" name="deploy_end_datetime" class="form-input">
+              <label class="form-label">City</label>
+              <input type="text" name="city" class="form-input" placeholder="千代田区">
             </div>
             <div class="form-group">
-              <label class="form-label">Device Status</label>
-              <input type="number" name="device_status" class="form-input" placeholder="0">
-              <small class="form-hint">デバイス状態コード (integer)</small>
+              <label class="form-label">Street Address</label>
+              <input type="text" name="street_address" class="form-input" placeholder="丸の内1-1-1">
             </div>
-            <div class="form-group full-width">
-              <label class="form-label">Description</label>
-              <textarea name="description" class="form-textarea" rows="3"></textarea>
+            <div class="form-group">
+              <label class="form-label">Building</label>
+              <input type="text" name="building" class="form-input" placeholder="○○ビル 5F">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="text" name="latitude" class="form-input" placeholder="35.6762">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="text" name="longitude" class="form-input" placeholder="139.6503">
             </div>
           </div>
         </div>
@@ -163,7 +188,7 @@
     </div>
   </div>
 
-  <script src="js/common.js"></script>
-  <script src="js/deployments.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/offices.js"></script>
 </body>
 </html>
