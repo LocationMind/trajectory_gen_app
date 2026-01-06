@@ -105,8 +105,8 @@ Geofences are used as origin and destination points for trajectories.
 
 Sample data is provided in the `data/sample/` directory:
 
-| File | Contents |
-|------|----------|
+| File                   | Contents                                                           |
+| ---------------------- | ------------------------------------------------------------------ |
 | `sample_geofences.csv` | Ward offices of Tokyo (23), Nagoya (16), and Osaka (24) - 63 total |
 
 1. Open the **Geofences** page
@@ -238,13 +238,13 @@ flowchart LR
     F[Geofence] --> E
 ```
 
-| Screen          | Purpose                  | Key Fields                                    |
-| --------------- | ------------------------ | --------------------------------------------- |
-| **Offices**     | Business locations       | company_id, office_name, prefecture_id, type  |
-| **Devices**     | Tracking devices         | serial_no, IMEI, IMSI, fw_version             |
-| **Vehicles**    | Company vehicles         | vehicle_number, model, model_description      |
-| **Deployments** | Device-Vehicle mapping   | device, vehicle, deploy_start, device_status  |
-| **Geofences**   | Location boundaries      | place_id, geofence_number, polygon            |
+| Screen          | Purpose                | Key Fields                                   |
+| --------------- | ---------------------- | -------------------------------------------- |
+| **Offices**     | Business locations     | company_id, office_name, prefecture_id, type |
+| **Devices**     | Tracking devices       | serial_no, IMEI, IMSI, fw_version            |
+| **Vehicles**    | Company vehicles       | vehicle_number, model, model_description     |
+| **Deployments** | Device-Vehicle mapping | device, vehicle, deploy_start, device_status |
+| **Geofences**   | Location boundaries    | place_id, geofence_number, polygon           |
 
 ---
 
@@ -332,27 +332,27 @@ View generated trips and their GNSS points on a full-screen map.
 
 ### GNSS Point (t_gnss_tracking_log compatible)
 
-| Field                    | Type       | Description                |
-| ------------------------ | ---------- | -------------------------- |
-| id                       | bigint     | Auto-generated             |
-| device_timestamp         | timestamp  | Device time                |
-| positioning_timestamp    | timestamp  | GPS fix time               |
-| imei                     | bigint     | Device IMEI                |
-| gps_status               | varchar    | "VALID" or "LOW_ACCURACY"  |
-| latitude                 | double     | -90 to 90                  |
-| longitude                | double     | -180 to 180                |
-| altitude                 | double     | Meters                     |
-| speed                    | double     | km/h                       |
-| direction                | double     | 0-360 degrees              |
-| authentication_status    | integer    | Authentication status      |
-| base_info                | varchar    | Base info                  |
-| hdop                     | double     | Horizontal dilution        |
-| lte_rssi                 | integer    | LTE signal strength        |
-| mmri_*                   | double     | MMRI related fields        |
-| cellular_*               | various    | Cellular positioning data  |
-| ekf_*                    | double     | EKF positioning data       |
-| fw_version               | varchar    | Firmware version           |
-| delete_flag              | boolean    | Soft delete                |
+| Field                 | Type      | Description               |
+| --------------------- | --------- | ------------------------- |
+| id                    | bigint    | Auto-generated            |
+| device_timestamp      | timestamp | Device time               |
+| positioning_timestamp | timestamp | GPS fix time              |
+| imei                  | bigint    | Device IMEI               |
+| gps_status            | varchar   | "VALID" or "LOW_ACCURACY" |
+| latitude              | double    | -90 to 90                 |
+| longitude             | double    | -180 to 180               |
+| altitude              | double    | Meters                    |
+| speed                 | double    | km/h                      |
+| direction             | double    | 0-360 degrees             |
+| authentication_status | integer   | Authentication status     |
+| base_info             | varchar   | Base info                 |
+| hdop                  | double    | Horizontal dilution       |
+| lte_rssi              | integer   | LTE signal strength       |
+| mmri_*                | double    | MMRI related fields       |
+| cellular_*            | various   | Cellular positioning data |
+| ekf_*                 | double    | EKF positioning data      |
+| fw_version            | varchar   | Firmware version          |
+| delete_flag           | boolean   | Soft delete               |
 
 ### Trip Metadata
 

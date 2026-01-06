@@ -121,7 +121,7 @@
             </div>
             <div class="form-group">
               <label class="form-label">Vehicle Number <span class="required">*</span></label>
-              <input type="text" name="vehicle_number" class="form-input" required placeholder="品川 500 あ 1234">
+              <input type="text" name="vehicle_number" class="form-input" required placeholder="Tokyo 500 A 1234">
             </div>
             <div class="form-group">
               <label class="form-label">Office</label>
@@ -136,40 +136,40 @@
             <div class="form-group">
               <label class="form-label">Model <span class="required">*</span></label>
               <input type="text" name="model" class="form-input" required placeholder="ABC-DEF123">
-              <small class="form-hint">型式</small>
+              <small class="form-hint">Model code</small>
             </div>
             <div class="form-group">
               <label class="form-label">Model Number</label>
               <input type="text" name="model_number" class="form-input" placeholder="12345">
-              <small class="form-hint">型式指定番号</small>
+              <small class="form-hint">Model designation number</small>
             </div>
             <div class="form-group">
               <label class="form-label">Model Description</label>
-              <input type="text" name="model_description" class="form-input" placeholder="トヨタ ハイエース">
-              <small class="form-hint">メーカー・車種など</small>
+              <input type="text" name="model_description" class="form-input" placeholder="Toyota Hiace">
+              <small class="form-hint">Manufacturer, vehicle type, etc.</small>
             </div>
             <div class="form-group">
               <label class="form-label">Calc Method</label>
               <select name="calc_method" class="form-select">
                 <option value="">Select method...</option>
-                <option value="improved_ton_km">Improved Ton-km (改良トンキロ法)</option>
-                <option value="fuel_method">Fuel Method (燃料法)</option>
-                <option value="fuel_economy_method">Fuel Economy Method (燃費法)</option>
+                <option value="improved_ton_km">Improved Ton-km</option>
+                <option value="fuel_method">Fuel Method</option>
+                <option value="fuel_economy_method">Fuel Economy Method</option>
               </select>
-              <small class="form-hint">CO2排出量計算方法</small>
+              <small class="form-hint">CO2 emission calculation method</small>
             </div>
             <div class="form-group">
               <label class="form-label">Fuel Type <span class="required">*</span></label>
               <select name="fuel_code" class="form-select" required>
                 <option value="">Select fuel...</option>
-                <option value="1">Gasoline (ガソリン)</option>
-                <option value="2">Diesel (軽油)</option>
+                <option value="1">Gasoline</option>
+                <option value="2">Diesel</option>
                 <option value="3">LPG</option>
                 <option value="4">CNG</option>
-                <option value="5">Electric (電気)</option>
-                <option value="6">Hybrid (ハイブリッド)</option>
+                <option value="5">Electric</option>
+                <option value="6">Hybrid</option>
               </select>
-              <small class="form-hint">燃料コード (1-6の整数)</small>
+              <small class="form-hint">Fuel code (integer 1-6)</small>
             </div>
           </div>
         </div>
