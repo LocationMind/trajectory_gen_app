@@ -2,8 +2,46 @@
 
 A browser-based application for generating simulated GNSS trajectory data for vehicle tracking systems. No backend required - runs entirely in the browser using IndexedDB for data persistence.
 
+## Objectives
+
+### System Overview
+
+This tool generates sample GNSS trajectory data for vehicle tracking systems.
+
+```mermaid
+flowchart LR
+    subgraph Vehicles
+        GPS[GPS Receiver]
+    end
+    
+    subgraph Server
+        DB[(Database)]
+        App[Applications]
+    end
+    
+    subgraph ThisTool [This Tool]
+        Gen[GNSS Trajectory Generator]
+    end
+    
+    GPS -->|Location Data| DB
+    Gen -.->|Sample Data| DB
+    DB --> App
+```
+
+### Background
+
+In vehicle tracking systems where servers collect trajectory location data from devices, there are two common challenges:
+
+1. **Need for realistic trajectory data** - Testing and demo screens require more realistic trajectory data rather than simplistic dummy data
+2. **Easy-to-use sample data for local development** - Developers need readily available sample data that can be used without complex setup
+
+This tool was created to solve these problems by providing a browser-based GNSS trajectory data generator that produces realistic sample data for development, testing, and demonstrations.
+
+---
+
 ## Table of Contents
 
+- [Objectives](#objectives)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Step-by-Step Guide](#step-by-step-guide)
