@@ -3,7 +3,7 @@
  */
 
 const STORAGE_KEY = STORAGE_KEYS.GEOFENCES;
-const CSV_COLUMNS = ['id', 'place_id', 'geofence_number', 'geofence_name', 'type', 'description', 'geofence', 'version_number', 'custom_geofence_flag'];
+const CSV_COLUMNS = ['id', 'place_id', 'geofence_number', 'geofence_name', 'type', 'geofence', 'version_number', 'custom_geofence_flag'];
 
 const GEOFENCE_TYPES = {
   0: 'Standard',

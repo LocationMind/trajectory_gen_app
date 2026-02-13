@@ -28,8 +28,8 @@ const sampleData = {
     { deploy_id: 2, device_id: 2, vehicle_id: 2, deploy_date: '2024-02-01', status: 'active', version_number: 1 }
   ],
   geofences: [
-    { id: 1, place_id: 'GF001', geofence_name: 'Tokyo Station', type: 1, description: 'Tokyo Station area', geofence: '{"type":"Polygon","coordinates":[[[139.7671,35.6812],[139.7691,35.6812],[139.7691,35.6832],[139.7671,35.6832],[139.7671,35.6812]]]}', version_number: 1 },
-    { id: 2, place_id: 'GF002', geofence_name: 'Shibuya Hub', type: 2, description: 'Shibuya warehouse', geofence: '{"type":"Polygon","coordinates":[[[139.7016,35.6580],[139.7036,35.6580],[139.7036,35.6600],[139.7016,35.6600],[139.7016,35.6580]]]}', version_number: 1 }
+    { id: 1, place_id: 'GF001', geofence_name: 'Tokyo Station', type: 1, geofence: '{"type":"Polygon","coordinates":[[[139.7671,35.6812],[139.7691,35.6812],[139.7691,35.6832],[139.7671,35.6832],[139.7671,35.6812]]]}', version_number: 1 },
+    { id: 2, place_id: 'GF002', geofence_name: 'Shibuya Hub', type: 2, geofence: '{"type":"Polygon","coordinates":[[[139.7016,35.6580],[139.7036,35.6580],[139.7036,35.6600],[139.7016,35.6600],[139.7016,35.6580]]]}', version_number: 1 }
   ],
   trips: [
     { id: 1, vehicle_id: 1, imei: '123456789012345', serial_no: 'DEV-001', origin_lat: 35.6812, origin_lng: 139.7671, origin_name: 'Tokyo Station', destination_lat: 35.6580, destination_lng: 139.7016, destination_name: 'Shibuya Hub', distance_meters: 8500, start_time: '2024-12-01T09:00:00Z', end_time: '2024-12-01T09:45:00Z', point_count: 270, settings: { interval: 10, avg_speed: 40 }, created_at: '2024-12-01T09:00:00Z' },
@@ -53,7 +53,7 @@ function generatePoints() {
         received_timestamp: new Date(new Date(trip.start_time).getTime() + i * 10000).toISOString(),
         positioning_timestamp: new Date(new Date(trip.start_time).getTime() + i * 10000).toISOString(),
         imei: trip.imei,
-        gps_status: 'VALID',
+        gps_status: 'A',
         gps_time: new Date(trip.start_time).getTime() / 1000 + i * 10,
         latitude: trip.origin_lat + (trip.destination_lat - trip.origin_lat) * progress + (Math.random() - 0.5) * 0.001,
         longitude: trip.origin_lng + (trip.destination_lng - trip.origin_lng) * progress + (Math.random() - 0.5) * 0.001,

@@ -347,7 +347,7 @@ View generated trips and their GNSS points on a full-screen map.
 | device_timestamp      | timestamp | Device time               |
 | positioning_timestamp | timestamp | GPS fix time              |
 | imei                  | bigint    | Device IMEI               |
-| gps_status            | varchar   | "VALID" or "LOW_ACCURACY" |
+| gps_status            | varchar   | "A" or "LOW_ACCURACY"     |
 | latitude              | double    | -90 to 90                 |
 | longitude             | double    | -180 to 180               |
 | altitude              | double    | Meters                    |
