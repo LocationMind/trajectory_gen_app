@@ -746,7 +746,7 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
   }
   
   // Add arrival stay
-  const arrivalStayMinutes = 15 + Math.floor(Math.random() * 46);
+  const arrivalStayMinutes = 60 + Math.floor(Math.random() * 61);
   const arrivalStayPoints = Math.ceil((arrivalStayMinutes * 60) / interval);
   
   for (let a = 0; a < arrivalStayPoints; a++) {
