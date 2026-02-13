@@ -308,36 +308,41 @@ async function exportTripData(tripsToExport) {
   CSV.export(tripData, Object.keys(tripData[0]), filename);
   
   // Export GNSS points
+  const allPointData = [];
   for (const trip of tripsToExport) {
     const points = await Storage.getByIndex(STORAGE_KEYS.GNSS_POINTS, 'trip_id', trip.id);
     
     if (points.length > 0) {
       points.sort((a, b) => new Date(a.positioning_timestamp) - new Date(b.positioning_timestamp));
       
-      const pointData = points.map((p, idx) => ({
-        id: idx + 1,
-        trip_id: p.trip_id,
-        device_timestamp: p.device_timestamp,
-        received_timestamp: p.received_timestamp,
-        positioning_timestamp: p.positioning_timestamp,
-        imei: p.imei,
-        gps_status: p.gps_status,
-        gps_time: p.gps_time,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        altitude: p.altitude,
-        speed: p.speed,
-        direction: p.direction,
-        hdop: p.hdop,
-        delete_flag: p.delete_flag
-      }));
-      
-      const pointFilename = tripsToExport.length === 1
-        ? `gnss_points_trip${trip.id}_${timestamp}.csv`
-        : `gnss_points_trip${trip.id}_batch_${timestamp}.csv`;
-        
-      CSV.export(pointData, Object.keys(pointData[0]), pointFilename);
+      for (const p of points) {
+        allPointData.push({
+          id: allPointData.length + 1,
+          trip_id: p.trip_id,
+          device_timestamp: p.device_timestamp,
+          received_timestamp: p.received_timestamp,
+          positioning_timestamp: p.positioning_timestamp,
+          imei: p.imei,
+          gps_status: p.gps_status,
+          gps_time: p.gps_time,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          altitude: p.altitude,
+          speed: p.speed,
+          direction: p.direction,
+          hdop: p.hdop,
+          delete_flag: p.delete_flag
+        });
+      }
     }
+  }
+  
+  if (allPointData.length > 0) {
+    const pointFilename = tripsToExport.length === 1
+      ? `gnss_points_trip${tripsToExport[0].id}_${timestamp}.csv`
+      : `gnss_points_all_${timestamp}.csv`;
+      
+    CSV.export(allPointData, Object.keys(allPointData[0]), pointFilename);
   }
 }
 
