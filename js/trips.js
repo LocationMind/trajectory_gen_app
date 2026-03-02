@@ -604,44 +604,36 @@ async function executeConsistencyFix() {
   `;
   
   const vehicleId = parseInt(document.getElementById('vehicleFilter').value);
-  const deletedTripIds = new Set();
   
   try {
-    // Process location gaps - generate connecting trips
     const locationGaps = consistencyIssues.filter(i => i.type === 'location_gap');
-    let cumulativeTimeShift = 0;
+    let accumulatedShiftMs = 0;
+    const shiftBoundaries = [];
     
     for (let i = 0; i < locationGaps.length; i++) {
       const issue = locationGaps[i];
       statusDiv.textContent = `Generating connecting trip ${i + 1}/${locationGaps.length}...`;
       
-      if (deletedTripIds.has(issue.fromTrip.id) || deletedTripIds.has(issue.toTrip.id)) {
-        continue;
+      const startTimeMs = new Date(issue.fromTrip.end_time).getTime() + accumulatedShiftMs;
+      const originalGapMs = new Date(issue.toTrip.start_time).getTime() - new Date(issue.fromTrip.end_time).getTime();
+      
+      const result = await generateConnectingTrip(issue, startTimeMs, originalGapMs);
+      
+      if (result.extraShiftMs > 0) {
+        accumulatedShiftMs += result.extraShiftMs;
       }
       
-      const result = await generateConnectingTrip(issue, cumulativeTimeShift);
-      if (result.deleted) {
-        deletedTripIds.add(issue.fromTrip.id);
-        if (result.deletedPrevious) {
-          const prevIssue = locationGaps[i - 1];
-          if (prevIssue) {
-            deletedTripIds.add(prevIssue.fromTrip.id);
-          }
-        }
-      } else {
-        cumulativeTimeShift = result.newCumulativeShift || cumulativeTimeShift;
-      }
+      shiftBoundaries.push({
+        toTripId: issue.toTrip.id,
+        accumulatedShiftMs: accumulatedShiftMs
+      });
     }
     
-    // Handle time overlaps
-    const timeOverlaps = consistencyIssues.filter(i => i.type === 'time_overlap');
-    if (timeOverlaps.length > 0) {
-      statusDiv.textContent = 'Resolving time overlaps...';
-      const shiftResult = await shiftSubsequentTrips(vehicleId, deletedTripIds);
-      shiftResult.deletedTripIds.forEach(id => deletedTripIds.add(id));
+    if (accumulatedShiftMs > 0) {
+      statusDiv.textContent = 'Shifting trip times...';
+      await applyTimeShifts(vehicleId, shiftBoundaries);
     }
     
-    // Re-analyze
     statusDiv.textContent = 'Re-analyzing...';
     await analyzeConsistency(vehicleId);
     await loadTrips();
@@ -666,13 +658,13 @@ async function executeConsistencyFix() {
   }
 }
 
-// Generate connecting trip
-async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
+// Generate connecting trip with adaptive speed/stay to fit available time.
+// Never deletes existing trips. Returns extraShiftMs if time shift is needed.
+async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
   if (!orsApiKeyForConsistency) {
     throw new Error('OpenRouteService API key not available');
   }
   
-  // Get route from OpenRouteService
   const response = await fetch(
     `https://api.openrouteservice.org/v2/directions/driving-car?start=${issue.fromLocation.lng},${issue.fromLocation.lat}&end=${issue.toLocation.lng},${issue.toLocation.lat}`,
     {
@@ -697,18 +689,46 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
   const totalDistance = summary.distance;
   
   const interval = 10;
-  const avgSpeed = 40;
   const minAccuracy = 3;
   const maxAccuracy = 20;
-  
-  const travelTimeSeconds = (totalDistance / 1000) / avgSpeed * 3600;
-  const totalTravelPoints = Math.ceil(travelTimeSeconds / interval);
-  
-  let currentTime = new Date(new Date(issue.fromTrip.end_time).getTime() + cumulativeTimeShift);
-  
+  const DEFAULT_SPEED = 40;
+  const MAX_SPEED = 200;
+  const MIN_STAY_MINUTES = 30;
+  const DEFAULT_STAY_MINUTES = 60 + Math.floor(Math.random() * 61);
+
+  let avgSpeed = DEFAULT_SPEED;
+  let arrivalStayMinutes = DEFAULT_STAY_MINUTES;
+  let extraShiftMs = 0;
+
+  const effectiveAvailable = Math.max(0, availableTimeMs);
+  let travelTimeSec = (totalDistance / 1000) / avgSpeed * 3600;
+  let totalNeededMs = (travelTimeSec + arrivalStayMinutes * 60) * 1000;
+
+  if (totalNeededMs > effectiveAvailable) {
+    arrivalStayMinutes = MIN_STAY_MINUTES;
+    totalNeededMs = (travelTimeSec + arrivalStayMinutes * 60) * 1000;
+  }
+
+  if (totalNeededMs > effectiveAvailable) {
+    const availableForTravelSec = (effectiveAvailable / 1000) - (arrivalStayMinutes * 60);
+    if (availableForTravelSec > 0) {
+      const neededSpeed = (totalDistance / 1000) / (availableForTravelSec / 3600);
+      avgSpeed = Math.min(neededSpeed, MAX_SPEED);
+    } else {
+      avgSpeed = MAX_SPEED;
+    }
+    travelTimeSec = (totalDistance / 1000) / avgSpeed * 3600;
+    totalNeededMs = (travelTimeSec + arrivalStayMinutes * 60) * 1000;
+  }
+
+  if (totalNeededMs > effectiveAvailable) {
+    extraShiftMs = totalNeededMs - effectiveAvailable;
+  }
+
+  const totalTravelPoints = Math.max(1, Math.ceil(travelTimeSec / interval));
+  let currentTime = new Date(startTimeMs);
   const points = [];
-  
-  // Generate travel points
+
   for (let i = 0; i <= totalTravelPoints; i++) {
     const progress = i / totalTravelPoints;
     const distanceAlongRoute = progress * totalDistance;
@@ -744,11 +764,8 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
     
     currentTime = new Date(currentTime.getTime() + interval * 1000);
   }
-  
-  // Add arrival stay
-  const arrivalStayMinutes = 60 + Math.floor(Math.random() * 61);
+
   const arrivalStayPoints = Math.ceil((arrivalStayMinutes * 60) / interval);
-  
   for (let a = 0; a < arrivalStayPoints; a++) {
     const stayPosition = addRandomOffset(issue.toLocation, 50);
     
@@ -771,21 +788,7 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
     
     currentTime = new Date(currentTime.getTime() + interval * 1000);
   }
-  
-  const tripEndTime = currentTime;
-  const nextTripStartTime = new Date(issue.toTrip.start_time);
-  
-  // Check if trip crosses midnight
-  const tripStartDate = new Date(issue.fromTrip.end_time).toDateString();
-  const tripEndDate = tripEndTime.toDateString();
-  
-  if (tripStartDate !== tripEndDate || tripEndTime > nextTripStartTime) {
-    // Delete this connecting trip and the previous trip
-    await deleteTripAndPoints(issue.fromTrip.id);
-    return { deleted: true, deletedPrevious: true };
-  }
-  
-  // Create trip record
+
   const newTrip = {
     vehicle_id: issue.fromTrip.vehicle_id,
     imei: issue.fromTrip.imei || 0,
@@ -806,7 +809,8 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
       break_time: 0,
       min_accuracy: minAccuracy,
       max_accuracy: maxAccuracy,
-      outlier_rate: 0
+      outlier_rate: 0,
+      arrival_stay_minutes: arrivalStayMinutes
     },
     created_at: new Date().toISOString(),
     is_connecting_trip: true
@@ -822,72 +826,45 @@ async function generateConnectingTrip(issue, cumulativeTimeShift = 0) {
   
   await Storage.addBulk(STORAGE_KEYS.GNSS_POINTS, pointsToSave);
   
-  return { 
-    deleted: false, 
-    newCumulativeShift: tripEndTime.getTime() - nextTripStartTime.getTime()
-  };
+  return { extraShiftMs };
 }
 
-// Shift subsequent trips to resolve time overlaps
-async function shiftSubsequentTrips(vehicleId, deletedTripIds) {
-  const vehicleTrips = await Storage.getByIndex(STORAGE_KEYS.TRIPS, 'vehicle_id', vehicleId);
-  vehicleTrips.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+// Apply time shifts to existing trips based on accumulated shift boundaries.
+// Each boundary marks a trip ID where the accumulated shift increases.
+// All existing (non-connecting) trips at or after that boundary get the shift applied.
+async function applyTimeShifts(vehicleId, shiftBoundaries) {
+  const allTrips = await Storage.getByIndex(STORAGE_KEYS.TRIPS, 'vehicle_id', vehicleId);
+  allTrips.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
   
-  const deletedIds = [];
-  let currentDayShift = 0;
+  const boundaryMap = new Map();
+  for (const b of shiftBoundaries) {
+    if (b.accumulatedShiftMs > 0) {
+      boundaryMap.set(b.toTripId, b.accumulatedShiftMs);
+    }
+  }
   
-  for (let i = 0; i < vehicleTrips.length - 1; i++) {
-    const currentTrip = vehicleTrips[i];
-    const nextTrip = vehicleTrips[i + 1];
-    
-    if (deletedTripIds.has(currentTrip.id) || deletedTripIds.has(nextTrip.id)) continue;
-    
-    const currentEndTime = new Date(currentTrip.end_time);
-    let nextStartTime = new Date(nextTrip.start_time);
-    
-    // Apply current day shift
-    if (currentDayShift > 0) {
-      nextStartTime = new Date(nextStartTime.getTime() + currentDayShift);
+  let currentShiftMs = 0;
+  
+  for (const trip of allTrips) {
+    if (boundaryMap.has(trip.id)) {
+      currentShiftMs = boundaryMap.get(trip.id);
     }
     
-    if (currentEndTime > nextStartTime) {
-      const overlapMs = currentEndTime - nextStartTime + 30 * 60 * 1000; // Add 30 min buffer
-      currentDayShift += overlapMs;
+    if (currentShiftMs > 0 && !trip.is_connecting_trip) {
+      trip.start_time = new Date(new Date(trip.start_time).getTime() + currentShiftMs).toISOString();
+      trip.end_time = new Date(new Date(trip.end_time).getTime() + currentShiftMs).toISOString();
+      await Storage.update(STORAGE_KEYS.TRIPS, trip);
       
-      const newStartTime = new Date(nextTrip.start_time).getTime() + currentDayShift;
-      const newEndTime = new Date(nextTrip.end_time).getTime() + currentDayShift;
-      
-      // Check if crosses midnight
-      const originalDate = new Date(nextTrip.start_time).toDateString();
-      const newDate = new Date(newStartTime).toDateString();
-      
-      if (originalDate !== newDate) {
-        // Delete trip if it crosses midnight
-        await deleteTripAndPoints(nextTrip.id);
-        deletedIds.push(nextTrip.id);
-        deletedTripIds.add(nextTrip.id);
-        currentDayShift = 0;
-        continue;
-      }
-      
-      // Update trip times
-      nextTrip.start_time = new Date(newStartTime).toISOString();
-      nextTrip.end_time = new Date(newEndTime).toISOString();
-      await Storage.update(STORAGE_KEYS.TRIPS, nextTrip);
-      
-      // Update GNSS points
-      const points = await Storage.getByIndex(STORAGE_KEYS.GNSS_POINTS, 'trip_id', nextTrip.id);
+      const points = await Storage.getByIndex(STORAGE_KEYS.GNSS_POINTS, 'trip_id', trip.id);
       for (const point of points) {
-        point.device_timestamp = new Date(new Date(point.device_timestamp).getTime() + currentDayShift).toISOString();
-        point.received_timestamp = new Date(new Date(point.received_timestamp).getTime() + currentDayShift).toISOString();
-        point.positioning_timestamp = new Date(new Date(point.positioning_timestamp).getTime() + currentDayShift).toISOString();
+        point.device_timestamp = new Date(new Date(point.device_timestamp).getTime() + currentShiftMs).toISOString();
+        point.received_timestamp = new Date(new Date(point.received_timestamp).getTime() + currentShiftMs).toISOString();
+        point.positioning_timestamp = new Date(new Date(point.positioning_timestamp).getTime() + currentShiftMs).toISOString();
         point.gps_time = new Date(point.positioning_timestamp).getTime() / 1000;
         await Storage.update(STORAGE_KEYS.GNSS_POINTS, point);
       }
     }
   }
-  
-  return { shiftedCount: 0, deletedCount: deletedIds.length, deletedTripIds: deletedIds };
 }
 
 // Delete trip and its points
