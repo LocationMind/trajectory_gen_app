@@ -612,10 +612,14 @@ async function executeConsistencyFix() {
     
     for (let i = 0; i < locationGaps.length; i++) {
       const issue = locationGaps[i];
-      statusDiv.textContent = `Generating connecting trip ${i + 1}/${locationGaps.length}...`;
+      statusDiv.textContent = `Generating connecting trip ${i + 1}/${locationGaps.length}${locationGaps.length > 10 ? ` (ETA ~${Math.ceil((locationGaps.length - i) * 1.5 / 60)}min)` : ''}...`;
       
       const startTimeMs = new Date(issue.fromTrip.end_time).getTime() + accumulatedShiftMs;
       const originalGapMs = new Date(issue.toTrip.start_time).getTime() - new Date(issue.fromTrip.end_time).getTime();
+      
+      if (i > 0) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
       
       const result = await generateConnectingTrip(issue, startTimeMs, originalGapMs);
       
@@ -665,22 +669,37 @@ async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
     throw new Error('OpenRouteService API key not available');
   }
   
-  const response = await fetch(
-    `https://api.openrouteservice.org/v2/directions/driving-car?start=${issue.fromLocation.lng},${issue.fromLocation.lat}&end=${issue.toLocation.lng},${issue.toLocation.lat}`,
-    {
+  const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${issue.fromLocation.lng},${issue.fromLocation.lat}&end=${issue.toLocation.lng},${issue.toLocation.lat}`;
+  const maxRetries = 5;
+  let data;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url, {
       headers: {
         'Authorization': orsApiKeyForConsistency,
         'Accept': 'application/json, application/geo+json'
       }
+    });
+    
+    if (response.status === 429) {
+      const waitSec = Math.pow(2, attempt + 1) * 10;
+      console.warn(`ORS rate limit hit, retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+      continue;
     }
-  );
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Route calculation failed');
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error?.message || `Route calculation failed (HTTP ${response.status})`);
+    }
+    
+    data = await response.json();
+    break;
   }
   
-  const data = await response.json();
+  if (!data) {
+    throw new Error('ORS API rate limit exceeded after all retries');
+  }
   const routeData = data.features[0];
   const coords = routeData.geometry.coordinates;
   const summary = routeData.properties.summary;
