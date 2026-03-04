@@ -621,7 +621,8 @@ async function executeConsistencyFix() {
         await new Promise(r => setTimeout(r, 1500));
       }
       
-      const result = await generateConnectingTrip(issue, startTimeMs, originalGapMs);
+      const onRetry = (msg) => { statusDiv.textContent = `[${i + 1}/${locationGaps.length}] ${msg}`; };
+      const result = await generateConnectingTrip(issue, startTimeMs, originalGapMs, onRetry);
       
       if (result.extraShiftMs > 0) {
         accumulatedShiftMs += result.extraShiftMs;
@@ -664,7 +665,7 @@ async function executeConsistencyFix() {
 
 // Generate connecting trip with adaptive speed/stay to fit available time.
 // Never deletes existing trips. Returns extraShiftMs if time shift is needed.
-async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
+async function generateConnectingTrip(issue, startTimeMs, availableTimeMs, onStatus = () => {}) {
   if (!orsApiKeyForConsistency) {
     throw new Error('OpenRouteService API key not available');
   }
@@ -685,14 +686,18 @@ async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
       });
     } catch (networkError) {
       const waitSec = Math.min(Math.pow(2, attempt + 1) * 5, 120);
-      console.warn(`ORS fetch failed (${networkError.message}), retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
+      const msg = `Network error, retrying in ${waitSec}s (${attempt + 1}/${maxRetries})...`;
+      console.warn(`ORS: ${msg} (${networkError.message})`);
+      onStatus(msg);
       await new Promise(r => setTimeout(r, waitSec * 1000));
       continue;
     }
     
     if (retryableStatuses.has(response.status)) {
       const waitSec = Math.min(Math.pow(2, attempt + 1) * 5, 120);
-      console.warn(`ORS returned ${response.status}, retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
+      const msg = `Server ${response.status}, retrying in ${waitSec}s (${attempt + 1}/${maxRetries})...`;
+      console.warn(`ORS: ${msg}`);
+      onStatus(msg);
       await new Promise(r => setTimeout(r, waitSec * 1000));
       continue;
     }
