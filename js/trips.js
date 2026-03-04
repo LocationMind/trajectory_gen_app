@@ -670,20 +670,29 @@ async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
   }
   
   const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${issue.fromLocation.lng},${issue.fromLocation.lat}&end=${issue.toLocation.lng},${issue.toLocation.lat}`;
-  const maxRetries = 5;
+  const maxRetries = 8;
+  const retryableStatuses = new Set([429, 500, 502, 503, 504]);
   let data;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': orsApiKeyForConsistency,
-        'Accept': 'application/json, application/geo+json'
-      }
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          'Authorization': orsApiKeyForConsistency,
+          'Accept': 'application/json, application/geo+json'
+        }
+      });
+    } catch (networkError) {
+      const waitSec = Math.min(Math.pow(2, attempt + 1) * 5, 120);
+      console.warn(`ORS fetch failed (${networkError.message}), retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+      continue;
+    }
     
-    if (response.status === 429) {
-      const waitSec = Math.pow(2, attempt + 1) * 10;
-      console.warn(`ORS rate limit hit, retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
+    if (retryableStatuses.has(response.status)) {
+      const waitSec = Math.min(Math.pow(2, attempt + 1) * 5, 120);
+      console.warn(`ORS returned ${response.status}, retrying in ${waitSec}s (attempt ${attempt + 1}/${maxRetries})`);
       await new Promise(r => setTimeout(r, waitSec * 1000));
       continue;
     }
@@ -698,7 +707,7 @@ async function generateConnectingTrip(issue, startTimeMs, availableTimeMs) {
   }
   
   if (!data) {
-    throw new Error('ORS API rate limit exceeded after all retries');
+    throw new Error('ORS API failed after all retries. Please try again later.');
   }
   const routeData = data.features[0];
   const coords = routeData.geometry.coordinates;
