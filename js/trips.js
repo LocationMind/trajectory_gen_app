@@ -635,9 +635,13 @@ async function executeConsistencyFix() {
     }
     
     if (accumulatedShiftMs > 0) {
-      statusDiv.textContent = 'Shifting trip times...';
+      statusDiv.textContent = 'Shifting trip times (location gaps)...';
       await applyTimeShifts(vehicleId, shiftBoundaries);
     }
+    
+    // Resolve time overlaps by shifting subsequent trips
+    statusDiv.textContent = 'Resolving time overlaps...';
+    await resolveTimeOverlaps(vehicleId);
     
     statusDiv.textContent = 'Re-analyzing...';
     await analyzeConsistency(vehicleId);
@@ -896,6 +900,39 @@ async function applyTimeShifts(vehicleId, shiftBoundaries) {
         point.gps_time = new Date(point.positioning_timestamp).getTime() / 1000;
         await Storage.update(STORAGE_KEYS.GNSS_POINTS, point);
       }
+    }
+  }
+}
+
+// Resolve all time overlaps by shifting subsequent trips forward.
+// Walks through all trips in chronological order and ensures each trip
+// starts after the previous one ends (with no gap required).
+async function resolveTimeOverlaps(vehicleId) {
+  const allTrips = await Storage.getByIndex(STORAGE_KEYS.TRIPS, 'vehicle_id', vehicleId);
+  allTrips.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+  
+  if (allTrips.length < 2) return;
+  
+  for (let i = 0; i < allTrips.length - 1; i++) {
+    const currentEnd = new Date(allTrips[i].end_time).getTime();
+    const nextStart = new Date(allTrips[i + 1].start_time).getTime();
+    
+    if (currentEnd <= nextStart) continue;
+    
+    const overlapMs = currentEnd - nextStart;
+    const trip = allTrips[i + 1];
+    
+    trip.start_time = new Date(new Date(trip.start_time).getTime() + overlapMs).toISOString();
+    trip.end_time = new Date(new Date(trip.end_time).getTime() + overlapMs).toISOString();
+    await Storage.update(STORAGE_KEYS.TRIPS, trip);
+    
+    const points = await Storage.getByIndex(STORAGE_KEYS.GNSS_POINTS, 'trip_id', trip.id);
+    for (const point of points) {
+      point.device_timestamp = new Date(new Date(point.device_timestamp).getTime() + overlapMs).toISOString();
+      point.received_timestamp = new Date(new Date(point.received_timestamp).getTime() + overlapMs).toISOString();
+      point.positioning_timestamp = new Date(new Date(point.positioning_timestamp).getTime() + overlapMs).toISOString();
+      point.gps_time = new Date(point.positioning_timestamp).getTime() / 1000;
+      await Storage.update(STORAGE_KEYS.GNSS_POINTS, point);
     }
   }
 }
